@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exotic Inductive Shell - UAP Command Interface</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
+      color: #0ff;
+      min-height: 100vh;
+      padding: 15px;
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #0ff;
+      padding-bottom: 15px;
+    }
+
+    .title {
+      font-size: 2.5em;
+      color: #0ff;
+      text-shadow: 0 0 20px #0ff;
+      margin-bottom: 5px;
+      font-weight: bold;
+      letter-spacing: 3px;
+    }
+
+    .subtitle {
+      color: #0f0;
+      font-size: 0.9em;
+      text-shadow: 0 0 10px #0f0;
+    }
+
+    .version {
+      color: #f0f;
+      font-size: 0.8em;
+      margin-top: 5px;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+    }
+
+    @media (max-width: 1400px) {
+      .container {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: rgba(10, 14, 39, 0.9);
+      border: 2px solid #0ff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #0ff, #f0f, #0ff);
+      opacity: 0.5;
+    }
+
+    .panel-title {
+      color: #0ff;
+      font-size: 1.2em;
+      margin-bottom: 15px;
+      border-bottom: 1px solid #0ff;
+      padding-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .metric {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: rgba(0, 255, 255, 0.05);
+      border-left: 2px solid #0ff;
+      border-radius: 4px;
+    }
+
+    .metric-label {
+      color: #0f0;
+      font-size: 0.85em;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-size: 1.8em;
+      color: #0ff;
+      font-weight: bold;
+      text-shadow: 0 0 10px #0ff;
+      font-family: 'Courier New', monospace;
+      word-break: break-all;
+    }
+
+    .metric-unit {
+      color: #0f0;
+      font-size: 0.8em;
+      margin-top: 3px;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-label {
+      color: #0f0;
+      font-size: 0.85em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .control-value {
+      color: #0ff;
+      font-weight: bold;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #1a1f3a 0%, rgba(0, 255, 255, 0.2) 50%, #1a1f3a 100%);
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      margin-bottom: 5px;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0ff, #0f0);
+      cursor: pointer;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0ff, #0f0);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    select {
+      width: 100%;
+      padding: 10px;
+      background: rgba(0, 255, 255, 0.05);
+      border: 1px solid #0ff;
+      border-radius: 4px;
+      color: #0ff;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+
+    select option {
+      background: #0a0e27;
+      color: #0ff;
+    }
+
+    .button {
+      width: 100%;
+      padding: 12px;
+      background: rgba(0, 255, 255, 0.1);
+      border: 2px solid #0ff;
+      color: #0ff;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 10px;
+    }
+
+    .button:hover {
+      background: rgba(0, 255, 255, 0.2);
+      box-shadow: 0 0 15px #0ff;
+    }
+
+    .button:active {
+      transform: scale(0.98);
+    }
+
+    .button.active {
+      background: rgba(0, 255, 0, 0.2);
+      border-color: #0f0;
+      color: #0f0;
+      box-shadow: 0 0 15px #0f0;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(0, 255, 255, 0.1);
+      border-radius: 4px;
+      margin: 8px 0;
+      overflow: hidden;
+      border: 1px solid #0ff;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #0f0, #0ff, #f0f);
+      border-radius: 4px;
+      transition: width 0.2s ease;
+      box-shadow: 0 0 10px currentColor;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: pulse 1s infinite;
+    }
+
+    .status-online {
+      background: #0f0;
+      box-shadow: 0 0 10px #0f0;
+    }
+
+    .status-idle {
+      background: #ff0;
+      box-shadow: 0 0 10px #ff0;
+      animation: pulse-yellow 1s infinite;
+    }
+
+    .status-offline {
+      background: #f00;
+      box-shadow: 0 0 10px #f00;
+      animation: pulse-red 0.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    @keyframes pulse-yellow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    @keyframes pulse-red {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .readout {
+      background: rgba(0, 255, 0, 0.05);
+      border: 1px solid #0f0;
+      border-radius: 4px;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 0.85em;
+      color: #0f0;
+      max-height: 150px;
+      overflow-y: auto;
+      line-height: 1.5;
+    }
+
+    .readout-line {
+      margin: 3px 0;
+    }
+
+    .warning {
+      color: #ff0;
+    }
+
+    .critical {
+      color: #f00;
+      font-weight: bold;
+    }
+
+    .success {
+      color: #0f0;
+    }
+
+    .canvas-container {
+      width: 100%;
+      height: 300px;
+      background: radial-gradient(ellipse at center, rgba(0, 255, 255, 0.1) 0%, rgba(0, 255, 255, 0.02) 100%);
+      border: 2px solid #0ff;
+      border-radius: 8px;
+      margin-top: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .field-visualization {
+      width: 100%;
+      height: 100%;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .data-cell {
+      background: rgba(0, 255, 255, 0.08);
+      border: 1px solid #0ff;
+      border-radius: 4px;
+      padding: 12px;
+    }
+
+    .data-label {
+      color: #0f0;
+      font-size: 0.8em;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .data-value {
+      color: #0ff;
+      font-size: 1.4em;
+      font-weight: bold;
+    }
+
+    .alert {
+      background: rgba(255, 0, 0, 0.1);
+      border: 2px solid #f00;
+      border-radius: 4px;
+      padding: 12px;
+      margin: 10px 0;
+      color: #ff6666;
+    }
+
+    .success-box {
+      background: rgba(0, 255, 0, 0.1);
+      border: 2px solid #0f0;
+      border-radius: 4px;
+      padding: 12px;
+      margin: 10px 0;
+      color: #0f0;
+    }
+
+    .scan-line {
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #0ff, transparent);
+      animation: scan 4s linear infinite;
+    }
+
+    @keyframes scan {
+      0% { top: 0%; }
+      100% { top: 100%; }
+    }
+
+    .logo {
+      font-size: 1.2em;
+      color: #f0f;
+      margin-bottom: 10px;
+      text-shadow: 0 0 10px #f0f;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">◆ ▲ ■</div>
+    <div class="title">EXOTIC INDUCTIVE SHELL</div>
+    <div class="subtitle">Nano-Metamaterial Energy Harvesting & Propulsion System</div>
+    <div class="version">v2.1 FIELD INTEGRATION ALPHA</div>
+  </div>
+
+  <div class="container">
+    <!-- Environmental Parameters -->
+    <div class="panel">
+      <div class="panel-title">⚙ Environmental</div>
+
+      <div class="control-group">
+        <label class="control-label">
+          <span>Field Environment</span>
+        </label>
+        <select id="envSelect" onchange="updateSystem()">
+          <option value="earth-ion">Earth Ionosphere (35km)</option>
+          <option value="earth-atm">Earth Atmosphere (5km)</option>
+          <option value="solar-wind">Solar Wind (Near Earth)</option>
+          <option value="plasma-cloud">Plasma Cloud (Dense)</option>
+          <option value="magnetosphere">Van Allen Belt (High Energy)</option>
+        </select>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Field Strength</div>
+        <div class="metric-value" id="fieldStrength">850 V/m</div>
+        <div class="metric-unit">Electromagnetic Field Intensity</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Current Density</div>
+        <div class="metric-value" id="currentDensity">0.0008 A/m²</div>
+        <div class="metric-unit">Available Charge Flux</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Frequency Spectrum</div>
+        <div class="metric-value" id="freqSpec">0.1-100 Hz</div>
+        <div class="metric-unit">Optimal Resonance Bands</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Plasma Density</div>
+        <div class="metric-value" id="plasmaDensity">100 cm⁻³</div>
+        <div class="metric-unit">Particle Count</div>
+      </div>
+    </div>
+
+    <!-- Material Properties -->
+    <div class="panel">
+      <div class="panel-title">🔬 Material Status</div>
+
+      <div class="metric">
+        <div class="metric-label">Shell Temperature</div>
+        <div class="metric-value" id="shellTemp">47°K</div>
+        <div class="metric-unit">Operational Cryogenic</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="tempBar" style="width: 20%"></div>
+        </div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Material Phase</div>
+        <div class="metric-value" id="materialPhase">Crystalline-Lattice</div>
+        <div class="metric-unit">Nano-structure Configuration</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Resonance Coherence</div>
+        <div class="metric-value" id="coherence">94%</div>
+        <div class="metric-unit">Phase Alignment Quality</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="coherenceBar" style="width: 94%; background: linear-gradient(90deg, #0f0, #0ff)"></div>
+        </div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Lattice Integrity</div>
+        <div class="metric-value" id="latticeInt">99.8%</div>
+        <div class="metric-unit">Structural Perfection</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="latticeBar" style="width: 99.8%; background: #0f0"></div>
+        </div>
+      </div>
+
+      <div class="readout" id="materialReadout">
+        <div class="readout-line">GRAPHENE-CNT MATRIX: NOMINAL</div>
+        <div class="readout-line">META-RESONATORS: 1,000 LAYERS ACTIVE</div>
+        <div class="readout-line">QUANTUM TUNNELING: ENABLED</div>
+        <div class="readout-line">SURFACE PLASMON: OPTIMIZED</div>
+      </div>
+    </div>
+
+    <!-- Energy Harvesting -->
+    <div class="panel">
+      <div class="panel-title">⚡ Energy Harvest</div>
+
+      <div class="control-group">
+        <label class="control-label">
+          <span>Harvest Efficiency</span>
+          <span class="control-value" id="effValue">65%</span>
+        </label>
+        <input type="range" id="effSlider" min="20" max="95" value="65" step="5" onchange="updateSystem()">
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">
+          <span>Collection Array Size</span>
+          <span class="control-value" id="sizeValue">314 m²</span>
+        </label>
+        <input type="range" id="sizeSlider" min="200" max="500" value="314" step="10" onchange="updateSystem()">
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Generated Voltage</div>
+        <div class="metric-value" id="voltage">1.2 MV</div>
+        <div class="metric-unit">Series Stack Output</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Harvested Current</div>
+        <div class="metric-value" id="current">285 A</div>
+        <div class="metric-unit">Parallel Collection</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Raw Power</div>
+        <div class="metric-value" id="rawPower">342 GW</div>
+        <div class="metric-unit">Before Rectification</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Usable Power</div>
+        <div class="metric-value" id="usablePower">328 GW</div>
+        <div class="metric-unit">After Conversion (96% eff)</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="powerBar" style="width: 100%; background: linear-gradient(90deg, #0ff, #f0f)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Propulsion System -->
+    <div class="panel">
+      <div class="panel-title">🚀 Propulsion Control</div>
+
+      <div class="control-group">
+        <label class="control-label">
+          <span>Thrust Output</span>
+          <span class="control-value" id="thrustValue">0%</span>
+        </label>
+        <input type="range" id="thrustSlider" min="0" max="100" value="0" step="5" onchange="updateSystem()">
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">
+          <span>Acceleration Mode</span>
+        </label>
+        <select id="accelMode" onchange="updateSystem()">
+          <option value="linear">Linear Acceleration</option>
+          <option value="logarithmic">Exponential Burst</option>
+          <option value="quantum">Quantum Jump</option>
+          <option value="field-coupled">Field-Coupled</option>
+        </select>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Acceleration Output</div>
+        <div class="metric-value" id="acceleration">0 m/s²</div>
+        <div class="metric-unit">Thrust to Mass Ratio</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Velocity</div>
+        <div class="metric-value" id="velocity">0 m/s</div>
+        <div class="metric-unit">Current Speed (Mach)</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Power Draw</div>
+        <div class="metric-value" id="powerDraw">0 GW</div>
+        <div class="metric-unit">Propulsion Consumption</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="powerDrawBar" style="width: 0%; background: linear-gradient(90deg, #0f0, #ff0, #f00)"></div>
+        </div>
+      </div>
+
+      <button class="button" id="engageBtn" onclick="toggleThrusters()">ENGAGE THRUSTERS</button>
+    </div>
+
+    <!-- Field Interaction -->
+    <div class="panel">
+      <div class="panel-title">🌐 Field Interaction</div>
+
+      <div class="control-group">
+        <label class="control-label">
+          <span>Field Coupling</span>
+          <span class="control-value" id="couplingValue">78%</span>
+        </label>
+        <input type="range" id="couplingSlider" min="10" max="99" value="78" step="5" onchange="updateSystem()">
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Field Penetration</div>
+        <div class="metric-value" id="penetration">12.5 km</div>
+        <div class="metric-unit">Effective Interaction Radius</div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Plasma Interaction</div>
+        <div class="metric-value" id="plasmaInt">Active</div>
+        <div class="metric-unit">
+          <span class="status-indicator status-online"></span>Online
+        </div>
+      </div>
+
+      <div class="metric">
+        <div class="metric-label">Resonance Lock</div>
+        <div class="metric-value" id="resonanceLock">SYNCHRONIZED</div>
+        <div class="metric-unit">Phase Coherence Maintained</div>
+      </div>
+
+      <div class="readout" id="fieldReadout">
+        <div class="readout-line success">FIELD LOCK: STABLE</div>
+        <div class="readout-line">PHASE ANGLE: 0.2°</div>
+        <div class="readout-line">HARMONIC: 16 MODES ACTIVE</div>
+        <div class="readout-line success">COUPLING EFFICIENCY: 78%</div>
+      </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="panel">
+      <div class="panel-title">📊 System Status</div>
+
+      <div class="data-grid">
+        <div class="data-cell">
+          <div class="data-label">Overall Status</div>
+          <div class="data-value" id="statusOverall">NOMINAL</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-label">Thermal</div>
+          <div class="data-value" id="statusThermal">COLD</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-label">Structural</div>
+          <div class="data-value" id="statusStructural">INTACT</div>
+        </div>
+        <div class="data-cell">
+          <div class="data-label">Energy Reserve</div>
+          <div class="data-value" id="statusEnergy">100%</div>
+        </div>
+      </div>
+
+      <div id="statusReadout" class="readout">
+        <div class="readout-line success">SYSTEMS ONLINE</div>
+        <div class="readout-line">POWER GENERATION: 328 GW</div>
+        <div class="readout-line">PROPULSION: IDLE</div>
+        <div class="readout-line success">ALL SYSTEMS NOMINAL</div>
+      </div>
+
+      <button class="button" onclick="runDiagnostics()">RUN DIAGNOSTICS</button>
+    </div>
+
+    <!-- Real-Time Visualization -->
+    <div class="panel full-width">
+      <div class="panel-title">📡 Real-Time Field Visualization</div>
+      <div class="canvas-container">
+        <canvas id="fieldCanvas" class="field-visualization"></canvas>
+        <div class="scan-line"></div>
+      </div>
+    </div>
+
+    <!-- Detailed Readout -->
+    <div class="panel full-width">
+      <div class="panel-title">🔍 System Diagnostics</div>
+      <div class="readout" id="detailedReadout" style="max-height: 200px;">
+        <div class="readout-line success">INITIALIZATION: COMPLETE</div>
+        <div class="readout-line">EXOTIC MATERIAL STATUS: OPTIMAL</div>
+        <div class="readout-line">NANO-LATTICE: 10^15 ELEMENTS ACTIVE</div>
+        <div class="readout-line">METAMATERIAL RESONATORS: 1,000 LAYERS</div>
+        <div class="readout-line">QUANTUM COUPLING: ENABLED</div>
+        <div class="readout-line success">SURFACE PLASMON: SYNCHRONIZED</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Environment data
+    const environments = {
+      'earth-ion': {
+        fieldStrength: 850,
+        currentDensity: 0.0008,
+        freqSpec: '0.1-100 Hz',
+        plasmaDensity: '50 cm⁻³'
+      },
+      'earth-atm': {
+        fieldStrength: 120,
+        currentDensity: 0.00015,
+        freqSpec: '0.1-50 Hz',
+        plasmaDensity: '10 cm⁻³'
+      },
+      'solar-wind': {
+        fieldStrength: 450,
+        currentDensity: 0.035,
+        freqSpec: '1 Hz - 10 kHz',
+        plasmaDensity: '5 cm⁻³'
+      },
+      'plasma-cloud': {
+        fieldStrength: 2200,
+        currentDensity: 0.18,
+        freqSpec: '10 Hz - 1 MHz',
+        plasmaDensity: '1000 cm⁻³'
+      },
+      'magnetosphere': {
+        fieldStrength: 5000,
+        currentDensity: 0.45,
+        freqSpec: '1 Hz - 100 kHz',
+        plasmaDensity: '2000 cm⁻³'
+      }
+    };
+
+    const SPHERE_RADIUS = 5;
+    const SPHERE_SURFACE = 4 * Math.PI * SPHERE_RADIUS ** 2;
+    const CIRCUMFERENCE = 2 * Math.PI * SPHERE_RADIUS;
+
+    // Enhancement factors for exotic material
+    const VOLTAGE_BOOST = 5.4;
+    const CURRENT_BOOST = 75;
+    const COHERENCE_BOOST = 160;
+    const FREQUENCY_BOOST = 16;
+    const EFFICIENCY = 0.96;
+
+    let state = {
+      environment: 'earth-ion',
+      efficiency: 0.65,
+      arraySize: 314,
+      thrust: 0,
+      accelMode: 'linear',
+      coupling: 0.78,
+      thrustersActive: false,
+      velocity: 0,
+      time: 0
+    };
+
+    function formatPower(watts) {
+      if (watts >= 1e15) return (watts / 1e15).toFixed(2) + ' PW';
+      if (watts >= 1e12) return (watts / 1e12).toFixed(2) + ' TW';
+      if (watts >= 1e9) return (watts / 1e9).toFixed(2) + ' GW';
+      if (watts >= 1e6) return (watts / 1e6).toFixed(2) + ' MW';
+      if (watts >= 1e3) return (watts / 1e3).toFixed(2) + ' kW';
+      return watts.toFixed(2) + ' W';
+    }
+
+    function formatVoltage(volts) {
+      if (volts >= 1e6) return (volts / 1e6).toFixed(2) + ' MV';
+      if (volts >= 1e3) return (volts / 1e3).toFixed(2) + ' kV';
+      return volts.toFixed(0) + ' V';
+    }
+
+    function updateSystem() {
+      state.environment = document.getElementById('envSelect').value;
+      state.efficiency = parseFloat(document.getElementById('effSlider').value) / 100;
+      state.arraySize = parseFloat(document.getElementById('sizeSlider').value);
+      state.thrust = parseFloat(document.getElementById('thrustSlider').value) / 100;
+      state.coupling = parseFloat(document.getElementById('couplingSlider').value) / 100;
+      state.accelMode = document.getElementById('accelMode').value;
+
+      const env = environments[state.environment];
+
+      // Update environment display
+      document.getElementById('fieldStrength').textContent = env.fieldStrength + ' V/m';
+      document.getElementById('currentDensity').textContent = env.currentDensity + ' A/m²';
+      document.getElementById('freqSpec').textContent = env.freqSpec;
+      document.getElementById('plasmaDensity').textContent = env.plasmaDensity;
+
+      // Update sliders display
+      document.getElementById('effValue').textContent = Math.round(state.efficiency * 100) + '%';
+      document.getElementById('sizeValue').textContent = Math.round(state.arraySize) + ' m²';
+      document.getElementById('thrustValue').textContent = Math.round(state.thrust * 100) + '%';
+      document.getElementById('couplingValue').textContent = Math.round(state.coupling * 100) + '%';
+
+      // Calculate voltages
+      const V_single = env.fieldStrength * CIRCUMFERENCE;
+      const V_total = 100 * V_single * VOLTAGE_BOOST * (state.efficiency * 0.5 + 0.5);
+
+      // Calculate currents
+      const I_parallel = env.currentDensity * state.arraySize * SPHERE_SURFACE / 314;
+      const I_total = I_parallel * CURRENT_BOOST * COHERENCE_BOOST / 100;
+
+      // Calculate power
+      const P_raw = V_total * I_total;
+      const P_usable = P_raw * EFFICIENCY * state.coupling;
+
+      // Update power metrics
+      document.getElementById('voltage').textContent = formatVoltage(V_total);
+      document.getElementById('current').textContent = Math.round(I_total * 10) / 10 + ' A';
+      document.getElementById('rawPower').textContent = formatPower(P_raw);
+      document.getElementById('usablePower').textContent = formatPower(P_usable);
+
+      // Update propulsion
+      const P_thrust = P_usable * state.thrust;
+      document.getElementById('powerDraw').textContent = formatPower(P_thrust);
+      document.getElementById('powerDrawBar').style.width = (state.thrust * 100) + '%';
+
+      // Calculate acceleration (simplified: F = P/v, but use theoretical max)
+      let accel = 0;
+      if (state.thrust > 0) {
+        const baseAccel = (P_thrust / 1e9) / 10; // Rough estimate
+        if (state.accelMode === 'linear') {
+          accel = baseAccel;
+        } else if (state.accelMode === 'logarithmic') {
+          accel = baseAccel * Math.log(state.thrust * 10 + 1);
+        } else if (state.accelMode === 'quantum') {
+          accel = baseAccel * (state.thrust > 0.5 ? 50 : 1);
+        } else if (state.accelMode === 'field-coupled') {
+          accel = baseAccel * state.coupling * 5;
+        }
+      }
+
+      document.getElementById('acceleration').textContent = Math.round(accel * 100) / 100 + ' m/s²';
+
+      // Update velocity
+      state.time += 0.1;
+      if (state.thrustersActive) {
+        state.velocity += accel * 0.1;
+      }
+      const mach = (state.velocity / 343).toFixed(2);
+      document.getElementById('velocity').textContent = Math.round(state.velocity) + ' m/s (Mach ' + mach + ')';
+
+      // Update material metrics
+      const cohereVal = Math.round(90 + state.coupling * 9);
+      document.getElementById('coherence').textContent = cohereVal + '%';
+      document.getElementById('coherenceBar').style.width = cohereVal + '%';
+
+      // Update status
+      let status = 'NOMINAL';
+      let thermal = 'COLD';
+      if (state.thrust > 0.7) {
+        status = 'HIGH_LOAD';
+        thermal = 'WARM';
+      } else if (state.thrust > 0.3) {
+        status = 'ACTIVE';
+        thermal = 'COOL';
+      }
+
+      document.getElementById('statusOverall').textContent = status;
+      document.getElementById('statusThermal').textContent = thermal;
+      document.getElementById('statusEnergy').textContent = '100%';
+
+      // Update readouts
+      updateReadouts(P_usable, state.thrust, state.coupling);
+      updateFieldVisualization();
+    }
+
+    function updateReadouts(power, thrust, coupling) {
+      let readout = '<div class="readout-line success">POWER GENERATION: ' + formatPower(power) + '</div>';
+      if (state.thrustersActive) {
+        readout += '<div class="readout-line">PROPULSION: ACTIVE</div>';
+        readout += '<div class="readout-line">THRUST LEVEL: ' + Math.round(thrust * 100) + '%</div>';
+      } else {
+        readout += '<div class="readout-line">PROPULSION: IDLE</div>';
+      }
+      readout += '<div class="readout-line">FIELD COUPLING: ' + Math.round(coupling * 100) + '%</div>';
+      readout += '<div class="readout-line success">NANO-LATTICE: OPERATING</div>';
+
+      document.getElementById('statusReadout').innerHTML = readout;
+
+      let detailed = '<div class="readout-line success">SYSTEM STATUS: ' + document.getElementById('statusOverall').textContent + '</div>';
+      detailed += '<div class="readout-line">ENVIRONMENT: ' + state.environment.toUpperCase() + '</div>';
+      detailed += '<div class="readout-line">EXOTIC MATERIAL: ACTIVE</div>';
+      detailed += '<div class="readout-line">METAMATERIAL LAYERS: 1,000/1,000</div>';
+      detailed += '<div class="readout-line success">QUANTUM TUNNELING: ENABLED</div>';
+      detailed += '<div class="readout-line">SURFACE PLASMON RESONANCE: SYNCHRONIZED</div>';
+      detailed += '<div class="readout-line">EFFICIENCY: ' + Math.round(state.efficiency * 100) + '%</div>';
+      detailed += '<div class="readout-line success">THERMAL SIGNATURE: MINIMAL</div>';
+
+      document.getElementById('detailedReadout').innerHTML = detailed;
+    }
+
+    function toggleThrusters() {
+      state.thrustersActive = !state.thrustersActive;
+      const btn = document.getElementById('engageBtn');
+      if (state.thrustersActive) {
+        btn.classList.add('active');
+        btn.textContent = 'THRUSTERS ENGAGED';
+      } else {
+        btn.classList.remove('active');
+        btn.textContent = 'ENGAGE THRUSTERS';
+        state.velocity = 0;
+        document.getElementById('thrustSlider').value = 0;
+      }
+      updateSystem();
+    }
+
+    function runDiagnostics() {
+      let diagnostics = '<div class="readout-line success">DIAGNOSTIC SCAN INITIATED...</div>';
+      diagnostics += '<div class="readout-line">› NANO-LATTICE INTEGRITY: CHECKING</div>';
+      setTimeout(() => {
+        diagnostics += '<div class="readout-line success">✓ NANO-LATTICE: 99.8% PERFECT</div>';
+        diagnostics += '<div class="readout-line">› METAMATERIAL RESONATORS: CHECKING</div>';
+      }, 500);
+
+      setTimeout(() => {
+        diagnostics += '<div class="readout-line success">✓ 1,000 RESONANCE LAYERS: ACTIVE</div>';
+        diagnostics += '<div class="readout-line">› QUANTUM COUPLING: CHECKING</div>';
+      }, 1000);
+
+      setTimeout(() => {
+        diagnostics += '<div class="readout-line success">✓ QUANTUM TUNNELING: OPERATIONAL</div>';
+        diagnostics += '<div class="readout-line success">✓ ALL DIAGNOSTICS PASSED</div>';
+        document.getElementById('detailedReadout').innerHTML = diagnostics;
+      }, 1500);
+
+      document.getElementById('detailedReadout').innerHTML = diagnostics;
+    }
+
+    function updateFieldVisualization() {
+      const canvas = document.getElementById('fieldCanvas');
+      if (!canvas.getContext) return;
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const baseRadius = 50;
+
+      // Draw field lines
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+      ctx.lineWidth = 1;
+      for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 12) {
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        const x = centerX + Math.cos(angle) * baseRadius * 2;
+        const y = centerY + Math.sin(angle) * baseRadius * 2;
+        ctx.lineTo(x, y);
+        ctx.stroke();
+      }
+
+      // Draw shell
+      const shellRadius = baseRadius * (0.8 + state.coupling * 0.3);
+      ctx.strokeStyle = '#0ff';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, shellRadius, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Draw energy points
+      ctx.fillStyle = '#0f0';
+      for (let i = 0; i < 12; i++) {
+        const angle = (Math.PI * 2 / 12) * i + state.time * 0.05;
+        const x = centerX + Math.cos(angle) * shellRadius;
+        const y = centerY + Math.sin(angle) * shellRadius;
+        ctx.fillRect(x - 3, y - 3, 6, 6);
+      }
+
+      // Draw thrust indicator
+      if (state.thrustersActive && state.thrust > 0) {
+        ctx.fillStyle = `rgba(255, 0, 0, ${state.thrust})`;
+        for (let i = 0; i < 3; i++) {
+          const angle = (Math.PI * 2 / 3) * i;
+          const x = centerX + Math.cos(angle) * (shellRadius + 20);
+          const y = centerY + Math.sin(angle) * (shellRadius + 20);
+          ctx.fillRect(x - 5, y - 5, 10, 10);
+        }
+      }
+
+      // Draw power flow
+      ctx.strokeStyle = `rgba(255, 255, 0, ${0.5 + state.efficiency * 0.5})`;
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 8; i++) {
+        const phase = (state.time * 0.1 + i * 0.5) % (Math.PI * 2);
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, baseRadius + Math.sin(phase) * 10, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    // Animation loop
+    function animate() {
+      state.time += 0.016;
+      updateFieldVisualization();
+      requestAnimationFrame(animate);
+    }
+
+    // Initialize
+    updateSystem();
+    animate();
+  </script>
+</body>
+</html>
